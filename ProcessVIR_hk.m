@@ -30,7 +30,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Loop through files starting here (!) indicates where looping info needed
 %Read the header
 t1 = tic;
-parfor fl = 1:size(Img_files{1},1)
+for fl = 1:size(Img_files{1},1)
     Hdr_file = strcat(Img_files{1}(fl), '.LBL'); %(!)
     header_info = textread(char(Hdr_file), '%s', 1000);
     [DataLevel, bands, samples, lines, Integration_Time, SpacecraftSolarDistance,...
@@ -62,7 +62,7 @@ parfor fl = 1:size(Img_files{1},1)
     %For each pixel find apropriate T and then compute blackbody curve from
     %that T
     t2 = tic;
-    for xl = 1:lines*samples
+    parfor xl = 1:lines*samples
             ydata = squeeze(R_RadianceData(xl,:))';
             ydata_sub = ydata(380:end-5,:);
             T(xl) = lsqcurvefit(@Lbb,t0,xdata_sub,ydata_sub,[],[],options);
@@ -81,12 +81,13 @@ parfor fl = 1:size(Img_files{1},1)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Write a new header and save file
     %%%ASSUMING DATA IS 1B (RADIANCE) VIR (NOT VIS) 
-    Out_file = strcat(Img_files{1}(1),'_Refl_ThermalCorr_v1','.IMG');
+    Out_file = strcat(Img_files{1}(fl),'_Refl_ThermalCorr_v1','.IMG');
     multibandwrite(Reflectance, char(Out_file),'bip');   
     func_VIR_IRheader_MyLevel1B(char(Out_file), samples, lines, bands, spectral_resolution);
 
-    Out_file2 = strcat(Img_files{1}(1),'_Temp_ThermalCorr_v1','.IMG');
+    Out_file2 = strcat(Img_files{1}(fl),'_Temp_ThermalCorr_v1','.IMG');
     multibandwrite(single(T), char(Out_file2),'bip');   
     func_VIR_IRheader_MyLevel1B(char(Out_file2), samples, lines, 1, spectral_resolution);
+    disp(fl)
 end
 s1 = toc(t1)
